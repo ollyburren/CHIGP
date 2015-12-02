@@ -18,7 +18,7 @@
 ## sed -e 's/^chr//' $filename | sort -k1,1 -k2,2n | /bin/bgzip -c > $filename.bgz
 ## /bin/tabix -p bed $filename.bgz
 
-## 1KG input files - these were downloaded from http://csg.sph.umich.edu//abecasis/MaCH/download/1000G.2012-03-14.html
+## 1KG input files - these were downloaded from -- need to check with Chris 
 
 ## EXAMPLE USAGE:
 
@@ -93,21 +93,21 @@ getArgs <- function(verbose=FALSE, defaults=NULL, numeric=NULL) {
 
 ## required parameters
 
-args<-list(
-	region_file=paste0(GRPATH,"cd4chic/gwas_integration/support/0.1cM_shuffled_regions/0.1cMcs"),
-	out_dir=paste0(CHICDATA,"/GWAS/CHIGP/PPI/SLE/"),
-	gwas_tbx=paste0(CHICDATA,"/GWAS/QC_TABIX/SLE.bed.gz"),
-	gwas_type="CC",
-	n_samples=10995,
-	prop_cases=0.37,
-	kg_compress_dir=paste0(STATSPATH,"1KGenome/VCF/EUR/by.chr.phase3/ALL."),
-	kg_compress_suffix=".phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.EUR.vcf.gz",
-	tabix_bin="/usr/local/bin/tabix",
-	pi_i=0.0001
-)
+# args<-list(
+# 	region_file=paste0(GRPATH,"cd4chic/gwas_integration/support/0.1cM_shuffled_regions/0.1cMcs"),
+# 	out_dir=paste0(CHICDATA,"/GWAS/CHIGP/PPI/SLE/"),
+# 	gwas_tbx=paste0(CHICDATA,"/GWAS/QC_TABIX/SLE.bed.gz"),
+# 	gwas_type="CC",
+# 	n_samples=10995,
+# 	prop_cases=0.37,
+# 	kg_compress_dir=paste0(STATSPATH,"1KGenome/VCF/EUR/by.chr.phase3/ALL."),
+# 	kg_compress_suffix=".phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.EUR.vcf.gz",
+# 	tabix_bin="/usr/local/bin/tabix",
+# 	pi_i=0.0001
+# )
 
-numerics<-c('n_samples','prop_cases','pi_i','r2_thresh')
-#args<-getArgs(verbose=TRUE,numeric=numerics)
+numerics<-c('n_samples','prop_cases','pi_i')
+args<-getArgs(verbose=TRUE,numeric=numerics)
 
 ## location of tabix bed file with pvals scores in
 gwas_tbx<-args[['gwas_tbx']]
@@ -212,7 +212,7 @@ computePPI<-function(r,gwas_tbx,verbose=TRUE){
   ## get 1kg snps for this region
   smt<-vcf2sm(r)
   if(any(is.na(smt)))
-    return(smt)
+    return(NA)
   sm.gt<-col.summary(smt$gt)
   #idx<-with(sm.gt,which(MAF< MAF.thresh | z.HWE^2>HWE.thresh | Call.rate<CALLRATE.thresh))
   ## remove those variants that are med indels (i.e. > 8)
@@ -232,6 +232,7 @@ computePPI<-function(r,gwas_tbx,verbose=TRUE){
                     })
   if(any(is.na(tmp.bed)))
     return(NA)
+    
   
   names(tmp.bed)<-c('chr','start','end','rs','pval')
   tmp.bed<-tmp.bed[!duplicated(tmp.bed$start),]
@@ -264,7 +265,9 @@ computePPI<-function(r,gwas_tbx,verbose=TRUE){
 
 regions<-scan(file=region_file,character())
 out.file<-paste0(out_dir,basename(region_file),'.imp')
-results<-do.call("rbind",lapply(regions,computePPI,gwas_tbx=gwas_tbx))
+results<-lapply(regions,computePPI,gwas_tbx=gwas_tbx)
+results<-results[sapply(results,is.data.table)]
+results<-rbindlist(results)
 ## remove those regions for which we have no coverage
 no.res<-which(is.na(results[,1]))
 print(paste(length(no.res)," regions are not covered"))
