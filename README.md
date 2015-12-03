@@ -40,9 +40,10 @@ tar -xvzf test_data.tgz
 The above command should have created a DATA directory 
 
 #Test run
-Once you have all of the above dependencies and data installed you should be able to take CHIGP for a spin. Running CHICGP consists of two steps
+Once you have all of the above dependencies and data installed you should be able to take CHIGP for a spin. Running CHICGP consists of three steps
   1. Convert p-vals to posterior probabilities using a reference set of genotypes.
-  2. Integrate CHiC interaction and other functional data to prioritise genes.
+  2. Generate support files for gene score algorithm.
+  3. Integrate CHiC interaction and other functional data to prioritise genes.
 For a given GWAS it should only be neccessary to run step 1 only once (unless of course you want to fiddle with parameters). You might want to run step 2 multiple times depending on what capture HiC datasets are available to you.
 
 ## Converting p-vals to posterior probabilities.
@@ -53,6 +54,20 @@ For a detailed discussion on how we do this please see Wakefield(2009), Giombart
 By way of illustration using our test dataset we can compute PPi for all variants on chr22
 ```
 cd CHIGP/sh
-bash test_ppi.sh
+./test_ppi.sh
 # results are returned in CHIGP/data/out/
+```
+
+If you have access to high performance computing the above step is easily parallelised, see section below on how to do this.
+
+## Generating support files.
+
+We next need to do some housekeeping to generate files that the algorithm can use to compute the gene scores and thus prioritise the genes. Again we illustrate this process using data from :-
+  1. Interactions Mifsud et al.(2015)
+  2. Recombination freq data from HapMap project  **need URL**
+  3. Functional annotatation taken from Ensembl e75 using VEP **Need citation**.
+
+```
+cd CHICGP/sh ## if not already there from previous step
+./test_gen_resource_files.sh
 ```
