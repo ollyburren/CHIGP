@@ -34,9 +34,9 @@ The method and software was co-developed by [Chris Wallace](http://chr1swallace.
 
 Follow instructions available from [htslib](https://github.com/samtools/htslib) to install tabix. Test software assumes that the location of the tabix binary is available on the path.
 
-##Setup .Rprofile
+##Setup Environment
 
-All scripts and instructions assume that you have a git repository directory in which you have cloned CHIGP. The test scripts assume that you will use a .Rprofile to let R know where this is.
+All scripts and instructions assume that you have a git repository directory in which you have cloned CHIGP. We need to setup a shell environment variable as to where that is
 
 ```
 ## assume git repo is in your home dir as CHIGP and is called gitr, you need to add your own USERNAME.
@@ -74,6 +74,19 @@ Once you have all of the above dependencies and data installed you should be abl
   2. Generate support files for gene score algorithm.
   3. Integrate CHiC interaction and other functional data to prioritise genes.
 For a given GWAS it should only be neccessary to run step 1 only once (unless of course you want to fiddle with parameters). You might want to run step 2 multiple times depending on what capture HiC datasets are available to you.
+
+##Quickstart
+
+See below for directions to run each of these step individually. For convenience and to test whether you have installed all dependencies you can do
+
+```
+cd CHIGP/sh
+make
+## if you want to start again at anytime run
+## make clean
+```
+
+This should create gene scores for all of chr22 based on Mifsud interactions and Okada GWAS for Rheumatoid Arthritis.
 
 ## Converting p-vals to posterior probabilities.
 
