@@ -94,13 +94,13 @@ Here is a results table (split over two tables for readability) of the top resul
 |0.1cM_chr22.imp |ENSG00000100023 |PPIL2   |protein_coding |+      |      22|
 |0.1cM_chr22.imp |ENSG00000128228 |SDF2L1  |protein_coding |+      |      22|
 
-|ensg            |name    | all_gene_score| CD34_gene_score| coding_gene_score| GM12878_gene_score| promoter_gene_score|
-|:---------------|:-------|--------------:|---------------:|-----------------:|------------------:|-------------------:|
-|ENSG00000100321 |SYNGR1  |      0.6919344|       0.6919344|          0.00e+00|          0.6917125|           0.6917124|
-|ENSG00000161180 |CCDC116 |      0.5201607|       0.5062241|          1.07e-05|          0.5128092|           0.3676899|
-|ENSG00000161179 |YDJC    |      0.5064901|       0.4987388|                NA|          0.5064809|           0.3825915|
-|ENSG00000100023 |PPIL2   |      0.3698667|       0.0007144|                NA|          0.3698667|           0.0006832|
-|ENSG00000128228 |SDF2L1  |      0.3680642|       0.3679398|                NA|          0.3680642|           0.0003168|
+|name    | all_gene_score| CD34_gene_score| coding_gene_score| GM12878_gene_score| promoter_gene_score|
+|:-------|--------------:|---------------:|-----------------:|------------------:|-------------------:|
+|SYNGR1  |      0.6919344|       0.6919344|          0.00e+00|          0.6917125|           0.6917124|
+|CCDC116 |      0.5201607|       0.5062241|          1.07e-05|          0.5128092|           0.3676899|
+|YDJC    |      0.5064901|       0.4987388|                NA|          0.5064809|           0.3825915|
+|PPIL2   |      0.3698667|       0.0007144|                NA|          0.3698667|           0.0006832|
+|SDF2L1  |      0.3680642|       0.3679398|                NA|          0.3680642|           0.0003168|
 
 This is just an example analysis for true analysis we would probably want to set a cut off of 0.5 on all_gene_score (things below this are likely to be highly speculative) for manual interpretation.
 
