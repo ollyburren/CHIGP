@@ -80,14 +80,35 @@ Next we compute final gene scores using chr22 as an example using data taken fro
 ```
 cd CHICGP/sh ## if not already there from previous step
 ./test_compute_gene_scores.sh
-```
+```                                                                                  
 
 ## Interpreting the results
 
-|disease         |ensg            |name    |biotype        |strand | baitChr| all_gene_score| CD34_gene_score| coding_gene_score| GM12878_gene_score| promoter_gene_score|
-|:---------------|:---------------|:-------|:--------------|:------|-------:|--------------:|---------------:|-----------------:|------------------:|-------------------:|
-|0.1cM_chr22.imp |ENSG00000100321 |SYNGR1  |protein_coding |+      |      22|      0.6919344|       0.6919344|          0.00e+00|          0.6917125|           0.6917124|
-|0.1cM_chr22.imp |ENSG00000161180 |CCDC116 |protein_coding |+      |      22|      0.5201607|       0.5062241|          1.07e-05|          0.5128092|           0.3676899|
-|0.1cM_chr22.imp |ENSG00000161179 |YDJC    |protein_coding |-      |      22|      0.5064901|       0.4987388|                NA|          0.5064809|           0.3825915|
-|0.1cM_chr22.imp |ENSG00000100023 |PPIL2   |protein_coding |+      |      22|      0.3698667|       0.0007144|                NA|          0.3698667|           0.0006832|
-|0.1cM_chr22.imp |ENSG00000128228 |SDF2L1  |protein_coding |+      |      22|      0.3680642|       0.3679398|                NA|          0.3680642|           0.0003168|
+Here is a results table (split over two tables for readability) of the top results by all_gene_score
+
+|disease         |ensg            |name    |biotype        |strand | baitChr|
+|:---------------|:---------------|:-------|:--------------|:------|-------:|
+|0.1cM_chr22.imp |ENSG00000100321 |SYNGR1  |protein_coding |+      |      22|
+|0.1cM_chr22.imp |ENSG00000161180 |CCDC116 |protein_coding |+      |      22|
+|0.1cM_chr22.imp |ENSG00000161179 |YDJC    |protein_coding |-      |      22|
+|0.1cM_chr22.imp |ENSG00000100023 |PPIL2   |protein_coding |+      |      22|
+|0.1cM_chr22.imp |ENSG00000128228 |SDF2L1  |protein_coding |+      |      22|
+
+|ensg            |name    | all_gene_score| CD34_gene_score| coding_gene_score| GM12878_gene_score| promoter_gene_score|
+|:---------------|:-------|--------------:|---------------:|-----------------:|------------------:|-------------------:|
+|ENSG00000100321 |SYNGR1  |      0.6919344|       0.6919344|          0.00e+00|          0.6917125|           0.6917124|
+|ENSG00000161180 |CCDC116 |      0.5201607|       0.5062241|          1.07e-05|          0.5128092|           0.3676899|
+|ENSG00000161179 |YDJC    |      0.5064901|       0.4987388|                NA|          0.5064809|           0.3825915|
+|ENSG00000100023 |PPIL2   |      0.3698667|       0.0007144|                NA|          0.3698667|           0.0006832|
+|ENSG00000128228 |SDF2L1  |      0.3680642|       0.3679398|                NA|          0.3680642|           0.0003168|
+
+This is just an example analysis for true analysis we would probably want to set a cut off of 0.5 on all_gene_score (things below this are likely to be highly speculative) for manual interpretation.
+
+For this example we can infer that the SYNGR1 prioritisation is driven by a signal within the promoter region of this gene. CCDC116 and YDJC genes have some evidence for non tissue specific interaction (we see similar scores across cell types). However the promoter region seem to be a major driver of these prioritisations. *PPIL2* appears to be driven by a tissue specific interaction in GM12878 cell line. Finally the *SDF2L1* appears to be driven by a non tissue specific interaction.
+
+## TODO
+
+  * Add in part for parallelising over HPC cluster.
+  * Add an option to ppi computation to impute using PMI method.
+  * Describe set based and hierachical Bayes factor comparison method.
+  * Add in software to compute suitable 'nulls' that are required for paper.
