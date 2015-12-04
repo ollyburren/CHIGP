@@ -30,6 +30,10 @@ The method and software was co-developed by [Chris Wallace](http://chr1swallace.
   
 #Initial setup
 
+##Tabix installation
+
+Follow instructions available from [htslib](https://github.com/samtools/htslib) to install tabix. Test software assumes that the location of the tabix binary is available on the path.
+
 ##Setup .Rprofile
 
 All scripts and instructions assume that you have a git repository directory in which you have cloned CHIGP. The test scripts assume that you will use a .Rprofile to let R know where this is.
@@ -37,7 +41,7 @@ All scripts and instructions assume that you have a git repository directory in 
 ```
 ## assume git repo is in your home dir as CHIGP and is called gitr, you need to add your own USERNAME.
 cd ~
-echo "GRPATH=/home/USERNAME/gitr/\n" >> .Rprofile
+echo "GRPATH='/home/USERNAME/gitr/'\n" >> .Rprofile
 ```
 
 ##Install R dependencies
