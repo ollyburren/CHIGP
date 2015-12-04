@@ -42,7 +42,8 @@ library(snpStats)
 library(data.table)
 
 ## GLOBAL VARIABLES
-
+## Environmental variable setup for GIT repository location
+GRPATH<-Sys.getenv("GRPATH")
 script.dir <- file.path(GRPATH,'CHIGP/R')
 data.dir <- file.path(GRPATH,'CHIGP/DATA')
 ## read in library functions

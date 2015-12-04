@@ -17,9 +17,10 @@
 library(data.table)
 library(GenomicRanges)
 
+## Environmental variable setup for GIT repository location
+GRPATH<-Sys.getenv("GRPATH")
 script.dir <- file.path(GRPATH,'CHIGP/R')
 data.dir <- file.path(GRPATH,'CHIGP/DATA')
-
 
 source(file.path(script.dir,'common.R'))
 

@@ -1,6 +1,6 @@
 #CHiGP
 
-CHiGP stands for **C**apture **Hi**-C **G**ene **P**rioritisation. It's purpose is to take a bunch of p-vals from a genome-wide association study and integrate these with capture Hi-C data to prioritise genes. The computational engine is written in R and whilst it should be possible to process on a laptop, things will go considerably faster if you have access to a compute cluster.
+CHiGP stands for **C**apture **Hi**-C **G**ene **P**rioritisation. It's purpose is to take a bunch of p-vals from a genome-wide association study and integrate these with capture Hi-C data to prioritise genes. The computational engine is written in R and whilst it should be possible to process on a laptop, things will go considerably faster if you have access to a compute cluster. Please note that at the moment we don't attempt to do anyhting sensible with MHC regions which we define as a region on chr6(25-35Mb) GRCh37 coords.
 
 ##Credits
 
@@ -40,10 +40,8 @@ All scripts and instructions assume that you have a git repository directory in 
 
 ```
 ## assume git repo is in your home dir as CHIGP and is called gitr, you need to add your own USERNAME.
-cd ~
-echo "GRPATH='/home/USERNAME/gitr/'" >> .Rprofile
-##MAC users might need
-#echo "GRPATH='/Users/USERNAME/gitr/'" >> .Rprofile
+GRPATH="/home/USERNAME/gitr/"
+export GRPATH
 ```
 
 ##Install R dependencies
@@ -102,7 +100,6 @@ We next need to do some housekeeping to generate files that the algorithm can us
 ```
 cd CHICGP/sh ## if not already there from previous step
 ./test_gen_resource_files.sh
-# results are returned in CHIGP/data/out/
 ```
 
 ## Computing gene scores
@@ -112,7 +109,7 @@ Next we compute final gene scores using chr22 as an example using data taken fro
 ```
 cd CHICGP/sh ## if not already there from previous step
 ./test_compute_gene_scores.sh 
-
+# results are returned in CHIGP/data/out/
 ```                                                                                  
 
 ## Interpreting the results
@@ -145,3 +142,5 @@ For this example we can infer that the SYNGR1 prioritisation is driven by a sign
   * Add an option to ppi computation to impute using PMI method.
   * Describe set based and hierachical Bayes factor comparison method.
   * Add in software to compute suitable 'nulls' that are required for paper.
+  * Citations for HapMap recombination data and Ensembl VEP tool.
+  * Add code for annotating interaction sets (adding gene names and biotypes) for peakMatrix and WashU formats. 
