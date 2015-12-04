@@ -9,17 +9,17 @@ RDATADIR = $(DATADIR)RDATA/
 $(DATADIR)/out/0.1cM_chr22.geneScores.tab:$(RDATADIR)/test_interactions.RData $(RDATADIR)/test_frags.by.ld.RData $(RDATADIR)/test_cnps.by.ld.RData
 	./test_compute_gene_scores.sh
 	
-$(RDATADIR)/test_interactions.RData:$(DATADIR)/out/0.1cM_chr22.imp
+$(RDATADIR)/test_interactions.RData:$(DATADIR)/out/0.1cM_chr22.ppi
 	./test_gen_resource_files.sh
 	
-$(RDATADIR)/test_frags.by.ld.RData:$(DATADIR)/out/0.1cM_chr22.imp
+$(RDATADIR)/test_frags.by.ld.RData:$(DATADIR)/out/0.1cM_chr22.ppi
 	./test_gen_resource_files.sh
 	
-$(RDATADIR)/test_cnps.by.ld.RData:$(DATADIR)/out/0.1cM_chr22.imp
+$(RDATADIR)/test_cnps.by.ld.RData:$(DATADIR)/out/0.1cM_chr22.ppi
 	./test_gen_resource_files.sh
 	
-$(DATADIR)/out/0.1cM_chr22.imp: 
+$(DATADIR)/out/0.1cM_chr22.ppi: 
 	./test_ppi.sh
 	
 clean:
-	rm $(DATADIR)/out/0.1cM_chr22.imp $(DATADIR)/out/0.1cM_chr22.geneScores.tab $(RDATADIR)/test*.RData
+	rm $(DATADIR)/out/0.1cM_chr22.ppi $(DATADIR)/out/0.1cM_chr22.geneScores.tab $(RDATADIR)/test*.RData

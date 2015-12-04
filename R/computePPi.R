@@ -231,7 +231,7 @@ computePPI<-function(r,gwas_tbx,verbose=TRUE){
 ## MAIN ##
 
 regions<-scan(file=region_file,character())
-out.file<-paste0(out_dir,basename(region_file),'.imp')
+out.file<-paste0(out_dir,basename(region_file),'.ppi')
 results<-lapply(regions,computePPI,gwas_tbx=gwas_tbx)
 results<-results[sapply(results,is.data.table)]
 results<-rbindlist(results)
