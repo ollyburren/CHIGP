@@ -34,8 +34,7 @@ install.packages("data.tables")
 Next grab the test file bundle. This contains a cut down set of real data taken from Misfud et al. and GWAS from Okada et al.
 ```
 cd CHIGP
-curl -s http://www.immunobase.org/Downloads/CHIGP/test_data.tgz
-tar -xvzf test_data.tgz
+curl -s http://www.immunobase.org/downloads/CHIGP/CHIGP.databundle.tgz | tar -xvz
 ```
 
 The above command should have created a DATA directory 
@@ -84,7 +83,7 @@ cd CHICGP/sh ## if not already there from previous step
 
 ## Interpreting the results
 
-Here is a results table (split over two tables for readability) of the top results by all_gene_score
+Here is a results table (split over two tables with headings truncated for readability) of the top results by 'all' gene score
 
 |disease         |ensg            |name    |biotype        |strand | baitChr|
 |:---------------|:---------------|:-------|:--------------|:------|-------:|
@@ -92,7 +91,7 @@ Here is a results table (split over two tables for readability) of the top resul
 |0.1cM_chr22.imp |ENSG00000161180 |CCDC116 |protein_coding |+      |      22|
 |0.1cM_chr22.imp |ENSG00000161179 |YDJC    |protein_coding |-      |      22|
 |0.1cM_chr22.imp |ENSG00000100023 |PPIL2   |protein_coding |+      |      22|
-|0.1cM_chr22.imp |ENSG00000128228 |SDF2L1  |protein_coding |+      |      22|
+|0.1cM_chr22.imp |ENSG00000128228 |SDF2L1  |protein_coding |+      |      22|                 
 
 |name    | all| CD34| coding| GM12878| promoter|
 |:-------|--------------:|---------------:|-----------------:|------------------:|-------------------:|
