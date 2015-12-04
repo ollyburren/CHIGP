@@ -41,7 +41,7 @@ All scripts and instructions assume that you have a git repository directory in 
 ```
 ## assume git repo is in your home dir as CHIGP and is called gitr, you need to add your own USERNAME.
 cd ~
-echo "GRPATH='/home/USERNAME/gitr/'\n" >> .Rprofile
+echo "GRPATH='/home/USERNAME/gitr/'" >> .Rprofile
 ```
 
 ##Install R dependencies
