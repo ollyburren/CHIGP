@@ -1,7 +1,12 @@
 #!/bin/bash
 ## get location of Rscript
-RSCRIPT_BIN=`which Rscript`
-TABIX_BIN=`which tabix`
+if [ $RSCRIPT_BIN =='' ] then
+	RSCRIPT_BIN=`which Rscript`
+fi
+if [ $TABIX_BIN == '' ] then
+	TABIX_BIN=`which tabix`
+fi
+
 if [ ! -e $RSCRIPT_BIN  ]
  then
 	echo "Cannot find Rscript aborting\n"

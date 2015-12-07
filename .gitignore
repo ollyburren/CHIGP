@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 /DATA/*
+/perl/*
 #*
 *~
 CHIGP.databundle.tgz
