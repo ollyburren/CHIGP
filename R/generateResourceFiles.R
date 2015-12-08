@@ -91,6 +91,8 @@ af.gr<-af.gr[!duplicated(af.gr$id),]
 
 ld.blocks<-fread(args[['region_bed_file']],header=FALSE)
 setnames(ld.blocks,c('chr','start','end','det'))
+## bed files are zero based - need to be consistent throughout
+ld.blocks$start<-ld.blocks$start+1
 ld.gr<-with(ld.blocks,GRanges(seqnames=Rle(chr),ranges=IRanges(start=start,end=end),ld.id=1:nrow(ld.blocks)))
 
 wld<-mergeByOverlaps(af.gr,ld.gr)
@@ -160,7 +162,7 @@ cs.gr[ol[,1],]$frag.id<-af.gr[ol[,2],]$id
 frag.file<-paste0(args[['out_dir']],'/',args[['prefix']],'frags.by.ld.RData')
 save(frags.gr,file=frag.file)
 message(paste('Written',frag.file))
-cs.file<-paste0(args[['out_dir']],'/',args[['prefix']],'cnps.by.ld.RData')
+cs.file<-paste0(args[['out_dir']],'/',args[['prefix']],'csnps.by.ld.RData')
 save(cs.gr,file=cs.file)
 message(paste('Written',cs.file))
 int.file<-paste0(args[['out_dir']],'/',args[['prefix']],'interactions.RData')
