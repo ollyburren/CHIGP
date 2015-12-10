@@ -164,7 +164,7 @@ make -f Makefile.pmi
 ## make -f Makefile.pmi clean
 ```
 
-You can run both and compare the results by using ./R/test_compare_gene_score_results.R script
+You can run both and compare the results by using ./R/testPPiVsPMIGeneScores.R script
 
 ## TODO
 
