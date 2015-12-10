@@ -81,9 +81,9 @@ See below for directions to run each of these step individually. For convenience
 
 ```
 cd CHIGP/sh
-make
+make -f Makefile.ppi
 ## if you want to start again at anytime run
-## make clean
+## make -f Makefile.ppi clean
 ```
 
 This should create gene scores for all of chr22 based on Mifsud interactions and Okada GWAS for Rheumatoid Arthritis.
@@ -121,7 +121,7 @@ Next we compute final gene scores using chr22 as an example using data taken fro
 
 ```
 cd CHICGP/sh ## if not already there from previous step
-./test_compute_gene_scores.sh 
+./test_compute_gene_scores_ppi.sh 
 # results are returned in CHIGP/data/out/
 ```                                                                                  
 
@@ -149,10 +149,26 @@ This is just an example analysis for true analysis we would probably want to set
 
 For this example we can infer that the SYNGR1 prioritisation is driven by a signal within the promoter region of this gene. CCDC116 and YDJC genes have some evidence for non tissue specific interaction (we see similar scores across cell types). However the promoter region seem to be a major driver of these prioritisations. *PPIL2* appears to be driven by a tissue specific interaction in GM12878 cell line. Finally the *SDF2L1* appears to be driven by a non tissue specific interaction.
 
+#PMI
+
+PMI stands for **P**oor **M**ans **I**mputation and it attempts using reference genotype set and a set of GWAS summary statistics to infer association p-values for SNPs not covered in a study. It does this by computing LD and then for missing p-values it assigns the same value as a snp that has a p-value with the maximum LD. Users can assign a threshold (default is r^2>0.6), if a SNP has a max LD score less than this with a SNP with a p-value then it is dropped. It's a simple method that is implemented to boost resolution when attempting to compute posterior probabilities.
+
+##Quickstart
+
+It follows a similar method to the ppi method previously described excepting a parameter chance when computing initial posterior probabilities.
+
+```
+cd CHIGP/sh
+make -f Makefile.pmi
+## if you want to start again at anytime run
+## make -f Makefile.pmi clean
+```
+
+You can run both and compare the results by using ./R/test_compare_gene_score_results.R script
+
 ## TODO
 
   * Add in part for parallelising over HPC cluster.
-  * Add an option to ppi computation to impute using PMI method.
   * Describe set based and hierachical Bayes factor comparison method.
   * Add in software to compute suitable 'nulls' that are required for paper.
   * Citations for HapMap recombination data and Ensembl VEP tool.

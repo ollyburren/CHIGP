@@ -1,0 +1,26 @@
+## makefile for running test analysis
+
+GRPATH = ../../
+DATADIR = ../DATA/
+RDATADIR = $(DATADIR)RDATA/
+
+#all:../DATA/out/0.1cM_chr22.geneScores.tab
+
+$(DATADIR)/out/0.1cM_chr22.geneScores.pmi.tab:$(RDATADIR)/test_interactions.RData $(RDATADIR)/test_frags.by.ld.RData $(RDATADIR)/test_cnps.by.ld.RData
+	./test_compute_gene_scores_pmi.sh
+	
+$(RDATADIR)/test_interactions.RData:$(DATADIR)/out/0.1cM_chr22.pmi
+	./test_gen_resource_files.sh
+	
+$(RDATADIR)/test_frags.by.ld.RData:$(DATADIR)/out/0.1cM_chr22.pmi
+	./test_gen_resource_files.sh
+	
+$(RDATADIR)/test_cnps.by.ld.RData:$(DATADIR)/out/0.1cM_chr22.pmi
+	./test_gen_resource_files.sh
+	
+$(DATADIR)/out/0.1cM_chr22.pmi: 
+	./test_pmi.sh
+	
+clean:
+	rm $(DATADIR)/out/0.1cM_chr22.pmi $(DATADIR)/out/0.1cM_chr22.geneScores.pmi.tab $(RDATADIR)/test*.RData
+	

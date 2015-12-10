@@ -20,7 +20,8 @@ library(data.table)
 library(reshape2)
 
 ## Environmental variable setup for GIT repository location
-GRPATH<-Sys.getenv("GRPATH")
+if(!interactive())
+  GRPATH<-Sys.getenv("GRPATH")
 script.dir <- file.path(GRPATH,'CHIGP/R')
 data.dir <- file.path(GRPATH,'CHIGP/DATA')
 
@@ -29,7 +30,7 @@ source(file.path(script.dir,'common.R'))
 
 
 args<-list(
-  pmi_file = file.path(data.dir,'out/0.1cM_chr22.imp'),
+  pmi_file = file.path(data.dir,'out/0.1cM_chr22.pmi'),
   out_file = file.path(data.dir,'out/0.1cM_chr22.geneScores.tab'),
   csnps = file.path(data.dir,'RDATA/test_cnps.by.ld.RData'),
   int = file.path(data.dir,'RDATA/test_interactions.RData'),
