@@ -166,10 +166,28 @@ make -f Makefile.pmi
 
 You can run both and compare the results by using ./R/testPPiVsPMIGeneScores.R script
 
+##BLOCKSHIFTER
+
+Blockshifter is software that allows us to compare the distribution of GWAS signals between two sets of 'prey' regions. Due to the underlying technology that detects restriction fragments there is significant correlation between fragments, which we need to take into account when looking for GWAS signal enrichment. The GWAS data are also correlated due to linkage disequilibrium, we have chosen to implement a technique based on GOSHIFTER, whereby the correlation structure due to LD is preserved but instead we permute the annotations by shifting their location but maintain order. We adapt the method to take into account the block structure of interactions also and thus shift blocks of interactions over the snp data to estimate the null distribution of the difference in weighted means between the test and control set. 
+
+```
+cd CHICGP/sh ## if not already there from previous step
+./test_blockshifter_pmi.sh 
+# results are returned in CHIGP/data/out/
+``` 
+
+##Interpreting the results
+
+|gwas            |test    |control | perm| p.emp|         z|   p.val.z|     delta|
+|:---------------|:-------|:-------|----:|-----:|---------:|---------:|---------:|
+|0.1cM_chr22.ppi |GM12878 |CD34    |  100|  0.97| -1.781786| 0.0747841| -2.13e-05|
+
+For our test data set we have compared GM12878 vs CD34 for enrichment of RA GWAS signals from OKADA rescaled as posterior probabilities for chromosome 22. Unsuprisingly given 100 perms we find no evidence for enrichment. p.emp=0.97 which is the empirically computed p value and resistant to the distribution of permuted nulls. The Z scores and p.val.z are computed under the assumption that the set of permuted null delta's are distributed normally, which might inflate significance if violated. It's included to facillitate  comparison between different gwas.  
+
+
 ## TODO
 
   * Add in part for parallelising over HPC cluster.
   * Describe set based and hierachical Bayes factor comparison method.
-  * Add in software to compute suitable 'nulls' that are required for paper.
   * Citations for HapMap recombination data and Ensembl VEP tool.
   * Add code for annotating interaction sets (adding gene names and biotypes) for peakMatrix and WashU formats. 
