@@ -76,7 +76,7 @@ blockshifter <-
   
   
   
-  message(test.set.label)
+  message(paste(test.set,"vs",control.set))
   
   test.set<-unlist(strsplit(test.set,","))
   control.set<-unlist(strsplit(control.set,","))
@@ -87,7 +87,7 @@ blockshifter <-
   keep.cols<-c(10:13,which(names(contacts) %in% ti))
   
   cf<-contacts[,keep.cols,with=FALSE]
-  
+
   
   ## as we are interested in targets we get duplicates and also depending
   ##on tissues selected we have targets that have no interactions we remove
@@ -311,6 +311,7 @@ blockshifter <-
   
   ## [COMPUTE NULL DELTA'S]
   
+  
   null.delta<-sapply(seq_along(mix.perms),function(i){
     mixp<-mix.perms[[i]]
     nomixp<-nomix.perms[[i]]
@@ -408,16 +409,23 @@ if(!interactive())
   args<-getArgs(verbose=TRUE,numeric=numerics)
 
 
-contacts<-fread(args[['contacts_file']],header=TRUE)
+
 gwas.file<-args[['pmi_file']]
 perm.no<-args[['perm_no']]
 test.set<-args[['test_tissue']]
 control.set<-args[['control_tissue']]
 output.file<-args[['output_file']]
 metric<-args[['metric']]
-test.set.label<-ifelse(is.null(args[["test_tissue_label"]]),args[['test_tissue']],args[["test_tissue_label"]])
-control.set.label<-ifelse(is.null(args[["control_tissue_label"]]),args[['control_tissue']],args[["control_tissue_label"]])
 all_vs_all = args["all_vs_all"]
+test.set.label=args[["test_tissue_label"]]
+control.set.label=args[["control_tissue_label"]]
+if(all_vs_all==0){
+	if(is.null(test.set.label))
+		test.set.label<-test.set
+	if(is.null(control.set.label))
+		control.set.label<-control.set
+}
+contacts<-fread(args[['contacts_file']],header=TRUE)
 
 
 
@@ -438,12 +446,13 @@ mhc.gr<-GRanges(seqnames=Rle('6'),ranges=IRanges(start=25e6,end=35e6))
 gwas.gr<-remove.ol(gwas.gr,mhc.gr)
 #save(null.delta,file=sub("txt","RData",output.file))
 
-if(all_vs_all){
+if(all_vs_all==1){
  ## get a list of names
   tissues<-names(contacts)[16:length(names(contacts))]
   bs<-do.call("rbind",lapply(tissues,function(ot){
     do.call("rbind",lapply(tissues,function(it){
       if(ot != it)
+      
         blockshifter(
           contacts = contacts,gwas.gr = gwas.gr,metric = metric,test.set = ot,control.set =it
         )
