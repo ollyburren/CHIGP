@@ -101,6 +101,14 @@ test.set.label<-ifelse(is.null(args[["test_tissue_label"]]),args[['test_tissue']
 control.set.label<-ifelse(is.null(args[["control_tissue_label"]]),args[['control_tissue']],args[["control_tissue_label"]])
 
 
+## Need to make sure that we only consider unique contacts (i.e. don't double count where a bait overlaps more than one TSS)
+## not sure that this is a problem given that we collapse oeID's later but do this just in case.
+
+contacts$uid<-with(contacts,paste(baitID,oeID,sep=":"))
+setkey(contacts,uid)
+contacts<-unique(contacts)
+
+
 ## if user wants only cell type specific interactions across whole dataset 
 if(super.target.only){
   ft<-contacts[,16:length(names(contacts)),with=FALSE]
@@ -394,7 +402,7 @@ if(!super.target.only & !target.only){
 	ptitle<-paste('Test set unique targets',test.lab,'VS',control.lab)
 	prefix<-'tu'
 }
-gwas_trait<-paste(sub("\\.pmi","",basename(gwas.file)),metric,sep=".")	 
+gwas_trait<-sub("\\.pmi","",basename(gwas.file))	 
 #sink(output.file)     
 print(paste0("#####",gwas_trait,"#####"))
 print(paste("TEST mlp:",signif(act.tmlp,digits=3),"n.snps:",sum(mer[mer$test,]$n)))
@@ -408,7 +416,7 @@ if(pval.emp==0)
 ## also compute Z score
 z<-(delta-mean(null.delta))/sd(null.delta)
 pval.z<-2*pnorm(abs(z),lower.tail = FALSE)
-output.df<-data.frame(gwas=gwas_trait,test=test.lab,control=control.lab,perm=perm.no,p.emp=pval.emp,z=z,p.val.z=pval.z,delta=delta)
+output.df<-data.frame(type=metric,gwas=gwas_trait,test=test.lab,control=control.lab,perm=perm.no,p.emp=pval.emp,z=z,p.val.z=pval.z,delta=delta)
 #save(null.delta,file=sub("txt","RData",output.file))
 write.table(output.df,file=output.file,sep="\t",quote=FALSE,row.names=FALSE)
 
