@@ -31,22 +31,37 @@ source(file.path(script.dir,'common.R'))
 
 args<-list(
   pmi_file = file.path(data.dir,'out/0.1cM_chr22.pmi'),
-  out_file = file.path(data.dir,'out/0.1cM_chr22.geneScores.tab'),
+  out_file = file.path(data.dir,'out/0.1cM_chr22.geneScores.sets.tab'),
   csnps = file.path(data.dir,'RDATA/test_cnps.by.ld.RData'),
   int = file.path(data.dir,'RDATA/test_interactions.RData'),
   frags = file.path(data.dir,'RDATA/test_frags.by.ld.RData'),
+  ## user defined sets
+  sets = file.path(data.dir,'support/test.set.RData'),
   ## if this is set to true then only coding SNPs in target gene are 
   ## included. If set to false then coding SNPs in interactions in genes
   ## other than target are counted.
-  target.gene.cSNPs.only=TRUE
+  target.gene.cSNPs.only=TRUE,
+  include.interactions.only = TRUE,
+  decompose = TRUE
 )
   
 if(!interactive()){
   args<-getArgs(verbose=TRUE,numeric=c('target.gene.cSNPs.only'))
 }
 
+
+
 if(sum(names(args)=='sets')==0)
 	args[['sets']]<-''
+
+if(is.null(args[['include.interactions.only']]))
+  args[['include.interactions.only']]<- FALSE
+
+if(is.null(args[['decompose']]))
+  args[['decompose']]<- FALSE
+
+
+
 
 ints<-get(load(args[['int']]))
 ## grab tissue names
@@ -122,9 +137,24 @@ if(!file.exists(args[['sets']])){
 	tissues<-split(tmp.tnames,tmp.tnames)
 	#tissues[['all']]<-names(ints)[16:32]
 	#tissues<-c(tissues,'all')
+	## decompose switch allows us to compute geneScores for sets of tissues but also 
+	## all indivdual tissues note that in this case if a set has one tissue its set name 
+	## will be replaced with the tissue name so as to avoid duplication.
+}else if (args[['decompose']]){
+	sets<-get(load(args[['sets']]))
+	## remove single tissue sets
+	sets<-sets[sapply(sets,length)>1]
+	## allow ease of selecting a sets 
+	names(sets)<-paste('set',names(sets),sep=".")
+	tissues<-c(sets,split(tmp.tnames,tmp.tnames))
 }else{
-	tissues<-get(load(args[['sets']]))
+  tissues<-get(load(args[['sets']]))
+  names(tissues)<-paste('set',names(tissues),sep=".")
 }
+
+if(args[['include.interactions.only']])
+  names(tissues)<-paste(names(tissues),'interactions_only',sep="_")
+
 tissues[['all']]<-tmp.tnames
 
 to.adj$uid<-with(to.adj,paste(ensg,frag.id,ld.id,sep=":"))
@@ -140,7 +170,13 @@ gint<-do.call("rbind",lapply(seq_along(tissues),function(i){
 	#	idx<-1:nrow(noncoding.interactions)
 	#}
 	snoncoding.interactions<-noncoding.interactions[idx,list(sppi=sum(sppi)),by="frag.id,ensg,ld.id"]
-	all.genes<-rbind(noncoding.prom,snoncoding.interactions)
+	## allow a switch that allows us to promoter component so we can examine 
+	## contribution of tissue specific interactions to the gene score
+	if(t == 'all' | !args[['include.interactions.only']]){
+	  all.genes<-rbind(noncoding.prom,snoncoding.interactions)
+	}else{
+    all.genes<-snoncoding.interactions
+  }
 	all.genes$uid<-with(all.genes,paste(ensg,frag.id,ld.id,sep=":"))
 	setcolorder(to.adj,names(all.genes))
 	all.genes$uid<-with(all.genes,paste(ensg,frag.id,ld.id,sep=":"))
@@ -151,7 +187,13 @@ gint<-do.call("rbind",lapply(seq_along(tissues),function(i){
 	all.genes<-all.genes[,list(sppi=sum(sppi,na.rm=TRUE)),by="frag.id,ld.id,ensg"]
 	all.genes<-all.genes[,list(sppi=sum(sppi,na.rm=TRUE)),by="ld.id,ensg"]
 	setcolorder(cs,names(all.genes))
-	total<-rbind(cs,all.genes)
+	## allow a switch that allows us to coding snp component so we can examine 
+	## contribution of tissue specific interactions to the gene score
+	if(t == 'all' | !args[['include.interactions.only']]){
+	  total<-rbind(cs,all.genes)
+	}else{
+	  total<-all.genes
+	}
 	ld.score<-total[,list(block_score=sum(sppi,na.rm=TRUE)),by="ensg,ld.id"]
 	gs<-ld.score[,list(gene_score=1-prod(1-block_score)),by="ensg"]
 	gs$tissue<-t
