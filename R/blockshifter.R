@@ -52,24 +52,17 @@ rotate<-function(v){
 
 blockshifter <-
   function(contacts,gwas.gr,metric,test.set,control.set,perm.no = 1e4,test.set.label,control.set.label,super.target.only =
-             FALSE,target.only = TRUE,chic.thresh=5) {
+             FALSE,target.only = TRUE) {
     
-  if(missing(test.set.label))
-    test.set.label=test.set
+  #if(missing(test.set.label))
+   # test.set.label=test.set
   
-  if(missing(control.set.label))
-    control.set.label=control.set
+  #if(missing(control.set.label))
+  #  control.set.label=control.set
     
   ## if user wants only cell type specific interactions across whole dataset 
   if(super.target.only){
     ft<-contacts[,16:length(names(contacts)),with=FALSE]
-    if(length(names(ft))<2){
-      message("Less than two cell types. Blockshifter is competitive and therefore needs more than once cell type")
-      break()
-    }
-    for(n in names(ft)){
-      ft[[n]]<-ft[[n]]>=chic.thresh
-    }
     contacts<-contacts[rowSums(ft)==1,]
   }
   
@@ -83,7 +76,6 @@ blockshifter <-
   
   ## define cell types to analyse and convert to a logical field
   ti<-c(test.set,control.set)
-  ## nasty dependence on peakMatrix format
   keep.cols<-c(10:13,which(names(contacts) %in% ti))
   
   cf<-contacts[,keep.cols,with=FALSE]
@@ -360,7 +352,7 @@ blockshifter <-
   ## also compute Z score
   z<-(delta-mean(null.delta))/sd(null.delta)
   pval.z<-2*pnorm(abs(z),lower.tail = FALSE)
-  output.df<-data.frame(type=metric,gwas=gwas_trait,test=test.lab,control=control.lab,perm=perm.no,p.emp=pval.emp,z=z,p.val.z=pval.z,delta=delta)
+  output.df<-data.frame(type=metric,gwas=gwas_trait,test=test.set.label,control=control.set.label,perm=perm.no,p.emp=pval.emp,z=z,p.val.z=pval.z,delta=delta)
   output.df
 }
 
@@ -431,7 +423,7 @@ contacts<-fread(args[['contacts_file']],header=TRUE)
 
 ## main
 
-
+chic.thresh=5
 ## Need to make sure that we only consider unique contacts (i.e. don't double count where a bait overlaps more than one TSS)
 ## not sure that this is a problem given that we collapse oeID's later but do this just in case.
 
@@ -439,29 +431,53 @@ contacts$uid<-with(contacts,paste(baitID,oeID,sep=":"))
 setkey(contacts,uid)
 contacts<-unique(contacts)
 contacts$uid<-NULL
+
+## blockshifter operates on thresholded interactions
+
+ft<-contacts[,16:length(names(contacts)),with=FALSE]
+if(length(names(ft))<2){
+      message("Less than two cell types. Blockshifter is competitive and therefore needs more than once cell type")
+      break()
+}
+for(n in names(ft)){
+	contacts[[n]]<-contacts[[n]]>=chic.thresh
+}
+
 ## read in gwas information
 gwas.gr<-pmifile2GRanges(gwas.file)
 ## remove the MHC
 mhc.gr<-GRanges(seqnames=Rle('6'),ranges=IRanges(start=25e6,end=35e6))
 gwas.gr<-remove.ol(gwas.gr,mhc.gr)
 #save(null.delta,file=sub("txt","RData",output.file))
-
-if(all_vs_all==1){
- ## get a list of names
-  tissues<-names(contacts)[16:length(names(contacts))]
+tissues<-names(contacts)[16:length(names(contacts))]
+if(is.null(test.set) & is.null(control.set)){
   bs<-do.call("rbind",lapply(tissues,function(ot){
     do.call("rbind",lapply(tissues,function(it){
-      if(ot != it)
-      
+      if(ot != it){
+      	test.set.label=test.set
+      	control.set.label=control.set
         blockshifter(
-          contacts = contacts,gwas.gr = gwas.gr,metric = metric,test.set = ot,control.set =it
+          contacts = contacts,gwas.gr = gwas.gr,metric = metric,test.set = ot,control.set =it,
+          test.set.label = test.set.label ,control.set.label = control.set.label
         )
+       }
     }))
   }))
+}else if(is.null(test.set)){
+	bs<-do.call("rbind",lapply(tissues,function(it){
+      if(it != control.set){
+      	test.set.label=it
+      	control.set.label=control.set
+        blockshifter(
+          contacts = contacts,gwas.gr = gwas.gr,metric = metric,test.set = it,control.set =control.set,
+          test.set.label = test.set.label ,control.set.label = control.set.label
+        )
+       }
+    }))
 }else{
   bs <-blockshifter(
     contacts = contacts,gwas.gr = gwas.gr,metric = metric,test.set = test.set,control.set =control.set,
-    test.set.label = test.set.label ,control.set.label = control.set.label, perm.no= 100
+    test.set.label = test.set.label ,control.set.label = control.set.label
   )
 }
 
