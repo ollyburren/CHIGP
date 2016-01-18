@@ -21,7 +21,7 @@ library(reshape2)
 library(yaml)
 library(data.tree)
 
-GRPATH<-'/Volumes/stats/GIT_REPOS/'
+GRPATH<-'/Users/oliver/gitr/'
 
 ## Environmental variable setup for GIT repository location
 if(!interactive())
@@ -54,13 +54,13 @@ args<-list(
 )
 
 args<-list(
-pmi_file = "/Volumes/stats/GIT_REPOS//astle/DATA//out/pmi/mchc_common.pmi",
-out_file = "/Volumes/stats/GIT_REPOS//astle/DATA//out/hierarchical_geneScore//mchc_common.pmi.tab",
-int = "/Volumes/stats/GIT_REPOS//astle/DATA//RDATA//astle_interactions.RData",
-frags = "/Volumes/stats/GIT_REPOS//astle/DATA//RDATA//astle_frags.by.ld.RData",
-csnps = "/Volumes/stats/GIT_REPOS//astle/DATA//RDATA//astle_csnps.by.ld.RData",
+pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/t1d.pmi",
+out_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore//mchc_common.pmi.tab",
+int = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_interactions.RData",
+frags = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_frags.by.ld.RData",
+csnps = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_csnps.by.ld.RData",
 target.gene.cSNPs.only = 1,
-sets = "/Volumes/stats/GIT_REPOS//astle/DATA//support/javierre_tree.yaml",
+sets = "/Users/oliver/DATA/JAVIERRE_GWAS/support/javierre_tree.yaml",
 include.interactions.only=1,
 decompose=1
 )
@@ -293,42 +293,36 @@ n<-as.Node(osList)
 n$noncoding$haematopoiesis$AddChildNode(setTree$Lymphoid)
 n$noncoding$haematopoiesis$AddChildNode(setTree$Myeloid)
 
-merged<-subset(merged,overall_gene_score>0.1)
+merged<-subset(merged,overall_gene_score>0.5)
 
 BF <- function(node) {
-  
-  if(!node$isLeaf){
-  ch<-node$children
-  print(names(ch))
-  fs<-lapply(ch,function(n){
-    if(n$isLeaf){
-      return(paste0(n$name,'_interactions_only_gene_score'))
-    }else{
-      return(paste0('set.',n$name,'_interactions_only_gene_score'))
+  if (!node$isLeaf) {
+    ch <- node$children
+    na <- names(merged)
+    fs <- lapply(ch,function(n) {
+      return(na[head(grep(n$name,na),n=1)])
+    })
+    if (length(fs) == 2) {
+      s1 <- fs[[1]]
+      s2 <- fs[[2]]
+      r <- merged[[s1]] / merged[[s2]]
+      dt <- data.table(ensg = merged$ensg, name=merged$name,BF = r)
+      dt$hyp <- node$name
+      dt[dt$BF < 1 / BF.thresh,]$hyp <- ch[[2]]$name
+      dt[dt$BF > BF.thresh,]$hyp <- ch[[1]]$name
+      dt[is.na(merged[[s1]]),]$hyp<-ch[[2]]$name
+      dt[is.na(merged[[s2]]),]$hyp<-ch[[1]]$name
+      return(dt)
     }
-  })
-  if(length(fs)==2){
-    s1<-fs[[1]]
-    s2<-fs[[2]]
-    head(merged[[s1]],n=1)/head(merged[[s2]],n=1)
-  }
   }
 }
 
-ppi <-  function(node) {
-  if(node$isLeaf){
-    fs<-paste0(node$name,'_interactions_only_gene_score')
-  }else{
-    fs<-paste0('set.',node$name,'_interactions_only_gene_score')
-  }
-  head(merged[[fs]],n=1)
-}
+#print(n,ppi=ppi)n
 
-#print(n,ppi=ppi)
-
-n$Do(ppi)
-
-
+foo<-(n$Get(BF,simplify="array"))
+h<-rbindlist(foo[!sapply(foo,is.logical)])
+h<-h[,nBF:=ifelse(BF<1,1/BF,BF)]
+res<-h[,.SD[which.max(nBF),],by=ensg]
 ## is this a coding snp or a non coding SNP (interactions or promoter)
 # prev<-'none'
 # s1<-'coding_gene_score'
