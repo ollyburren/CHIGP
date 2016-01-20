@@ -347,7 +347,6 @@ wBF<-function(node){
     ch<-par$children
     sib.name<-names(ch)[names(ch) != node$name]
     sib<-ch[[sib.name]]
-    print(sib$ppi)
     wBF<-node$ppi/sib$ppi
     # for those below threshold set to zero
     wBF[wBF<BF.thresh]<-0
@@ -363,30 +362,6 @@ cumBF<-function(node){
   return(apply(ancwBF, 1, prod,na.rm=TRUE))
 }
 
-cscore<-function(node){
-  print(node$name)
-  #if(!node$isLeaf & !node$isRoot){
-  if(!node$isRoot){
-    ## grab the parent
-    par<-node$parent
-    ## compute the BF wrt this node
-    ch<-par$children
-    sib.name<-names(ch)[names(ch) != node$name]
-    sib<-ch[[sib.name]]
-    print(sib$ppi)
-    BFw<-node$ppi/sib$ppi
-    print(BFw)
-    parent.avppi<-par$avPPi
-    current.avppi<-node$avPPi
-    #we effectively terminate branch where avppi stops increasing
-    term.branch.idx<-which(parent.avppi>=current.avppi)
-    current.avppi[term.branch.idx]<-0
-    current.avppi<-current.avppi * BFw
-    return(current.avppi)
-  }
-  return(rep(-1,length(node$avPPi)))
-}
-
 
 
 
@@ -398,8 +373,6 @@ n$Do(function(node) node$BF=BF(node) )
 n$Do(function(node) node$wBF=wBF(node) )
 n$Do(function(node) node$score=cumBF(node))
 n$Do(function(node) node$nBF=ifelse(node$BF>1,node$BF,1/node$BF) )
-
-#n$Do(function(node) node$score=cscore(node) )
 
 
 
