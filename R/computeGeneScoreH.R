@@ -57,7 +57,7 @@ args<-list(
 )
 
 args<-list(
-pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/t1d.pmi",
+pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/RA_OKADA_IMB.pmi",
 out_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore//mchc_common.pmi.tab",
 int = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_interactions.RData",
 frags = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_frags.by.ld.RData",
@@ -341,23 +341,80 @@ bscore<-function(node){
   return(rep(-1,length(node$avPPi)))
 }
 
+wBF<-function(node){
+  if(!node$isRoot){
+    par<-node$parent
+    ch<-par$children
+    sib.name<-names(ch)[names(ch) != node$name]
+    sib<-ch[[sib.name]]
+    print(sib$ppi)
+    wBF<-node$ppi/sib$ppi
+    # for those below threshold set to zero
+    wBF[wBF<BF.thresh]<-0
+    return(wBF)
+  }
+  return(BF.thresh)
+}
+
+cumBF<-function(node){
+  if(node$isRoot)
+    return(BF.thresh)
+  ancwBF<-do.call("cbind",node$Get('wBF',traversal = "ancestor"))
+  return(apply(ancwBF, 1, prod,na.rm=TRUE))
+}
+
+cscore<-function(node){
+  print(node$name)
+  #if(!node$isLeaf & !node$isRoot){
+  if(!node$isRoot){
+    ## grab the parent
+    par<-node$parent
+    ## compute the BF wrt this node
+    ch<-par$children
+    sib.name<-names(ch)[names(ch) != node$name]
+    sib<-ch[[sib.name]]
+    print(sib$ppi)
+    BFw<-node$ppi/sib$ppi
+    print(BFw)
+    parent.avppi<-par$avPPi
+    current.avppi<-node$avPPi
+    #we effectively terminate branch where avppi stops increasing
+    term.branch.idx<-which(parent.avppi>=current.avppi)
+    current.avppi[term.branch.idx]<-0
+    current.avppi<-current.avppi * BFw
+    return(current.avppi)
+  }
+  return(rep(-1,length(node$avPPi)))
+}
+
+
+
 
 ## this allows us to easilly map between nodes and the datatable containing values
 n$Do(function(node) node$dtName=convertNodeToDTName(node))
 n$Do(function(node) node$ppi=ppi(node) )
 n$Do(function(node) node$avPPi=avPPi(node) )
-n$Do(function(node) node$score=bscore(node) )
 n$Do(function(node) node$BF=BF(node) )
+n$Do(function(node) node$wBF=wBF(node) )
+n$Do(function(node) node$score=cumBF(node))
+n$Do(function(node) node$nBF=ifelse(node$BF>1,node$BF,1/node$BF) )
+
+#n$Do(function(node) node$score=cscore(node) )
+
 
 
 ## only consider nodes where the ppi is above our threshdold
-res.dt<-do.call("rbind",lapply(Traverse(n),function(node){
-  dt <- data.table(ensg = merged.f$ensg, name= merged.f$name,score= node$score,ppi=merged.f[[node$dtName]],node=node$name,BF=node$BF)
+res.dt <- do.call("rbind",lapply(Traverse(n),function(node) {
+  dt <-
+    data.table(
+      ensg = merged.f$ensg, name = merged.f$name,score = node$score,appi = node$avPPi,node =
+        node$name,wBF = node$wBF,nBF = node$nBF
+    )
 }))
 
 ## next we
-res.dt<-res.dt[,nBF:=ifelse(BF<1,1/BF,BF)]
-h<-res.dt[res.dt$ppi >= all.thresh,.SD[which.max(.SD$score),],by=ensg]
+#res.dt<-res.dt[,nBF:=ifelse(BF<1,1/BF,BF)]
+h<-res.dt[,.SD[which.max(.SD$score),],by=ensg]
 
 
 
@@ -373,6 +430,7 @@ h<-res.dt[res.dt$ppi >= all.thresh,.SD[which.max(.SD$score),],by=ensg]
 
 #geneName<-'CD4'
 geneName<- sample(h$name,1)
+#geneName<-'WDR59'
 
 ppi.sg<-function(n,geneName){
   return(subset(merged.f,name==geneName)[[n$dtName]])
@@ -429,7 +487,7 @@ getFormat<-function(node){
 }
 
 par(mar=c(1,1,1,1))
-plot(gnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=geneName)
+plot(gnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=paste(toupper(disease),geneName,sep=':'))
 
 for(node in Traverse(gn)){
   f<-getFormat(node)
@@ -463,9 +521,10 @@ assignWeights<-function(n,dt){
 wn$Do(function(node) node$weight = assignWeights(node,wc))
 
 Nodelabel2<-function(node){
-  if(node$isLeaf)
-    return(paste0(node$name,' ',node$weight))
-  return(paste0('\n',node$name))
+  #if(node$isLeaf)
+    cw<-node$cWeight
+    return(paste0(node$name,' ',ifelse(is.na(cw),0,cw)))
+  #return(paste0('\n',node$name))
 }
 
 cumWeight<-function(node){
@@ -476,21 +535,23 @@ cumWeight<-function(node){
   return(w)
 }
 
+wn$Do(function(node) node$cWeight = cumWeight(node))
 
 
-tw<-pmin(wn$Get(cumWeight),100)
+
+tw<-pmin(wn$Get(cumWeight), mean(sapply(wn$noncoding$interaction$children,cumWeight)))
 rbPal <- colorRampPalette(c('green','red'))
 tw<-split(rbPal(20)[as.numeric(cut(tw,breaks = 20))],names(tw))
 
 
 par(mar=c(1,1,1,1))
-plot(wnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main="T1D")
+plot(wnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=toupper(disease))
 lw.scale.factor<-20/nrow(h)
 cex.scale.factor<-2/nrow(h)
 for(node in Traverse(wn)){
   pw<-sum(sum(node$Get('weight')))
   if(!node$isLeaf)
-    nodelabels(Nodelabel2(node), GetPhyloNr(node, "node"), frame = 'none', adj = c(-0.3, 0.1),col = "black",cex=1)
+    nodelabels(Nodelabel2(node), GetPhyloNr(node, "node"), frame = 'none', adj = c(-0.3, 0.1),col = "black",cex=0.7)
   if(!node$isRoot)
     edges(GetPhyloNr(node$parent, "node"), GetPhyloNr(node, "node"), lwd=pw*lw.scale.factor,col = tw[[node$name]])
  
