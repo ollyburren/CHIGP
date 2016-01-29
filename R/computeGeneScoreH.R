@@ -57,7 +57,7 @@ args<-list(
 )
 
 args<-list(
-pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/RA_OKADA_IMB.pmi",
+pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/ra_okada_imb.pmi",
 out_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore//mchc_common.pmi.tab",
 int = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_interactions.RData",
 frags = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_frags.by.ld.RData",
@@ -376,18 +376,19 @@ n$Do(function(node) node$nBF=ifelse(node$BF>1,node$BF,1/node$BF) )
 
 
 
-## only consider nodes where the ppi is above our threshdold
+## only consider nodes where the ppi is above our threshold
 res.dt <- do.call("rbind",lapply(Traverse(n),function(node) {
   dt <-
     data.table(
       ensg = merged.f$ensg, name = merged.f$name,score = node$score,appi = node$avPPi,node =
-        node$name,wBF = node$wBF,nBF = node$nBF
+        node$name,wBF = node$wBF,nBF = node$nBF, isLeaf = node$isLeaf
     )
 }))
 
 ## next we
 #res.dt<-res.dt[,nBF:=ifelse(BF<1,1/BF,BF)]
 h<-res.dt[,.SD[which.max(.SD$score),],by=ensg]
+h<-h[order(h$score),]
 
 
 
@@ -395,186 +396,3 @@ h<-res.dt[,.SD[which.max(.SD$score),],by=ensg]
 
 
 
-#lapply(foo,function(x) if(is.data.table(x)) subset(x,name=="BACH2") )
-
-## plotting fun ;)
-
-## here we implement for a given gene a decision tree and then spit it out
-
-#geneName<-'CD4'
-geneName<- sample(h$name,1)
-#geneName<-'WDR59'
-
-ppi.sg<-function(n,geneName){
-  return(subset(merged.f,name==geneName)[[n$dtName]])
-}
-
-BF.sg<-function(n,geneName){
-  if (!n$isLeaf)
-    return(oBF<-subset(res.dt,name==geneName & node==n$name)$nBF)
-  return(0)
-}
-
-getBranchPath<-function(node,geneName){
-  node.name<-subset(h,name==geneName)$node
-  path<-node$Get(function(x) return(x$pathString),traversal="post-order",filterFun = function(y) y$name==node.name)
-  print(path)
-  return(unlist(strsplit(path,split='/')))
-}
-
-selected<-function(n,node.list){
-  return(n$name %in% node.list)
-}
-
-above.thresh<-function(n,thresh){
-  if(is.na(n$ppi))
-    return(FALSE)
-  return(n$ppi>thresh)
-}
-
-gn<-Clone(n)
-selected.branch.path<-getBranchPath(gn,geneName)
-gn$Do(function(node) node$ppi = ppi.sg(node,geneName))
-gn$Do(function(node) node$BF = BF.sg(node,geneName))
-gn$Do(function(node) node$selected = selected(node,selected.branch.path))
-gn$Do(function(node) node$above.thresh = above.thresh(node,all.thresh))
-
-library(ape)
-gn$Revert()
-gnp <- as.phylo(gn)
-
-Nodelabel <- function(node) {
-  if(node$isLeaf)
-    return(paste0( node$name,': PPi ', format(signif(node$ppi,digits=2), scientific = ifelse(node$ppi<0.001,TRUE,FALSE), big.mark = "'")))
-  if(node$above.thresh)
-    return(paste0( node$name,'\n BF ', ifelse(is.na(node$BF),'NA',format(signif(node$BF,digits=2), scientific = ifelse(node$BF>100,TRUE,FALSE), big.mark = "'"))))
-  return(paste0(node$name,'\n'))
-}
-
-getFormat<-function(node){
-    if(node$selected)
-      return(list(col='red',lw=2,tcol='red'))
-    if(node$above.thresh)
-      return(list(col='black',lw=1,tcol='black'))
-    return(list(col='grey',lw=1,tcol='white'))
-}
-
-par(mar=c(1,1,1,1))
-plot(gnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=paste(toupper(disease),geneName,sep=':'))
-
-for(node in Traverse(gn)){
-  f<-getFormat(node)
-  print(f)
-  if(!node$isRoot)
-    edges(GetPhyloNr(node$parent, "node"), GetPhyloNr(node, "node"), lwd=f[['lw']],col = f[['col']])
-    if(!node$isLeaf){
-      nodelabels(Nodelabel(node), GetPhyloNr(node, "node"), frame = 'none', adj = c(0.5, 0.2),col = f[['col']],cex=0.8)
-    }
-  if(node$isLeaf)
-    tiplabels(Nodelabel(node), GetPhyloNr(node, "node"), frame = "none", adj = c(0, 0),col=f[['col']],cex=0.8)
-  
-  
-}
-
-## another thing one might do is plot the pathweight for a complete disease for all selected genes
-
-## get unique nodes
-
-wc<-h[,list(ncount=nrow(.SD)),by="node"]
-wn<-Clone(n)
-wnp <- as.phylo(wn)
-assignWeights<-function(n,dt){
-  print(n$name)
-  w<-subset(dt,node==n$name)$ncount
-  if(length(w)==0)
-    w<-0
-  return(w)
-}
-
-wn$Do(function(node) node$weight = assignWeights(node,wc))
-
-Nodelabel2<-function(node){
-  #if(node$isLeaf)
-    cw<-node$cWeight
-    return(paste0(node$name,' ',ifelse(is.na(cw),0,cw)))
-  #return(paste0('\n',node$name))
-}
-
-cumWeight<-function(node){
-  w<-sum(sum(node$Get('weight')))
-  if(w==0)
-    w<-return(NA)
-  #return(log(w))
-  return(w)
-}
-
-wn$Do(function(node) node$cWeight = cumWeight(node))
-
-
-
-tw<-pmin(wn$Get(cumWeight), mean(sapply(wn$noncoding$interaction$children,cumWeight)))
-rbPal <- colorRampPalette(c('green','red'))
-tw<-split(rbPal(20)[as.numeric(cut(tw,breaks = 20))],names(tw))
-
-
-par(mar=c(1,1,1,1))
-plot(wnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=toupper(disease))
-lw.scale.factor<-20/nrow(h)
-cex.scale.factor<-2/nrow(h)
-for(node in Traverse(wn)){
-  pw<-sum(sum(node$Get('weight')))
-  if(!node$isLeaf)
-    nodelabels(Nodelabel2(node), GetPhyloNr(node, "node"), frame = 'none', adj = c(-0.3, 0.1),col = "black",cex=0.7)
-  if(!node$isRoot)
-    edges(GetPhyloNr(node$parent, "node"), GetPhyloNr(node, "node"), lwd=pw*lw.scale.factor,col = tw[[node$name]])
- 
-  if(node$isLeaf)
-    tiplabels(Nodelabel2(node), GetPhyloNr(node, "node"), frame = "none", adj = c(0, 0),col="black",cex=0.8)
-}
-
-
-## took a long time but we probably don't need !
-# branchTest <- function(node,leaf.names,level.no) {
-#   if (!node$isLeaf) {
-#     print(node$name)
-#     ch <- node$children
-#     #na <- names(merged.f)
-#     #dt.node<-convertNodeToDTName(n)
-#     dt.node<-node$dtName
-#     #fs <- lapply(ch,convertNodeToDTName)
-#     #print(fs)
-#     if (length(ch) == 2) {
-#       s1 <- ch[[1]]$dtName
-#       s2 <- ch[[2]]$dtName
-#       r <- merged.f[[s1]] / merged.f[[s2]]
-#       dt <- data.table(ensg = merged.f$ensg, name=merged.f$name,BF = r,ppi=merged.f[[dt.node]])
-#       dt$hyp <- node$name
-#       dt[dt$BF < 1 / BF.thresh,]$hyp <- ch[[2]]$name
-#       dt[dt$BF > BF.thresh,]$hyp <- ch[[1]]$name
-#       dt[is.na(merged.f[[s1]]),]$hyp<-ch[[2]]$name
-#       dt[is.na(merged.f[[s2]]),]$hyp<-ch[[1]]$name
-#       dt[dt$BF < 1 / BF.thresh,]$ppi <- merged.f[dt$BF < 1 / BF.thresh,s2,with=FALSE]
-#       dt[dt$BF > BF.thresh,]$ppi <- merged.f[dt$BF > BF.thresh,s1,with=FALSE]
-#       dt[is.na(merged.f[[s1]]),]$ppi<-merged.f[is.na(merged.f[[s1]]),s2,with=FALSE]
-#       dt[is.na(merged.f[[s2]]),]$ppi<-merged.f[is.na(merged.f[[s2]]),s1,with=FALSE]
-#       dt$isLeaf <- dt$hyp %in% leaf.names
-#       dt$level <- unlist(level.no[dt$hyp])
-#       ## compute an average for each gene of leaf nodes
-#       dt$avPPi<-rowMeans(merged.f[,node$Get('dtName',filterFun = isLeaf),with=FALSE],na.rm=TRUE)
-#       dt$node<-node$name
-#       return(dt)
-#       #return(subset(dt,hyp==node$name))
-#     }
-#   }
-# }
-# 
-# leaf.names<-sapply(n$leaves,'[[','name')
-# level.no<-n$Get(function(no) no$level)
-# foo<-(n$Get(branchTest,leaf.names,level.no,simplify="array"))
-#h<-rbindlist(foo[!sapply(foo,is.logical)])
-#h<-h[,nBF:=ifelse(BF<1,1/BF,BF)]
-## we need to pick the top BF for each category as we end up
-## adding BF to the wrong category sometimes
-#hs<-subset(h,nBF>=BF.thresh & ppi>=all.thresh)
-#res<-hs[,.SD[head(order((.SD$level^2*rank(.SD$BF))*.SD$ppi,decreasing = TRUE),n=1),],by=ensg]
-#res<-hs[,.SD[head(order(rank(.SD$avPPi),decreasing = TRUE),n=1),],by=ensg]
