@@ -10,12 +10,12 @@ merged.f<-subset(merged,overall_gene_score >= all.thresh)
 par_yaml<-'
 name: overall
 coding:
-name: coding
+  name: coding
 noncoding:
-promoter:
-name: promoter
-interaction:
-name: interaction
+  promoter:
+    name: promoter
+  interaction:
+    name: interaction
 '
 
 osList <- yaml.load(par_yaml)
