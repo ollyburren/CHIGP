@@ -27,15 +27,17 @@ getTreeYAML<-function(yfile){
 }
 
 
-all.thresh<-0.5
+all.thresh<-0.3
 BF.thresh<-3
 
-gs.dir<-'/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore/'
+gs.dir = file.path(data.dir,'out/hierachical_geneScore/')
 
 args<-list(
-  score_file=file.path(gs.dir,'ra_okada_imb_full.tab'),
-  sets = "/Users/oliver/DATA/JAVIERRE_GWAS/support/javierre_tree.yaml"
+  score_file=file.path(gs.dir,'0.1cM_chr22_full.tab'),
+  sets = file.path(data.dir,'support/mifsud.yaml'),
+  geneName = 'PPIL2'
 )
+
 disease<-sub("\\_full[.][^.]*$", "", basename(args[['score_file']]), perl=TRUE)
 merged<-fread(args[['score_file']])
 setTree<-getTreeYAML(args[['sets']])
@@ -55,8 +57,11 @@ noncoding:
 
 osList <- yaml.load(par_yaml)
 n<-as.Node(osList)
-n$noncoding$interaction$AddChildNode(setTree$Lymphoid)
-n$noncoding$interaction$AddChildNode(setTree$Myeloid)
+chil<-setTree$children
+n$noncoding$interaction$AddChildNode(chil[[1]])
+n$noncoding$interaction$AddChildNode(chil[[2]])
+# n$noncoding$interaction$AddChildNode(setTree$Lymphoid)
+# n$noncoding$interaction$AddChildNode(setTree$Myeloid)
 
 merged.f<-subset(merged,overall_gene_score>all.thresh)
 
@@ -157,12 +162,6 @@ h<-h[order(h$score),]
 
 ## here we implement for a given gene a decision tree and then spit it out
 
-#geneName<-'CD4'
-geneName<- sample(h$name,1)
-#geneName<-'WDR59'
-#geneName<-'AHR'
-geneName<-'PTGFRN'
-
 ppi.sg<-function(n,geneName){
   return(subset(merged.f,name==geneName)[[n$dtName]])
 }
@@ -191,9 +190,9 @@ above.thresh<-function(n,thresh){
 }
 
 gn<-Clone(n)
-selected.branch.path<-getBranchPath(gn,geneName)
-gn$Do(function(node) node$ppi = ppi.sg(node,geneName))
-gn$Do(function(node) node$BF = BF.sg(node,geneName))
+selected.branch.path<-getBranchPath(gn,args[['geneName']])
+gn$Do(function(node) node$ppi = ppi.sg(node,args[['geneName']]))
+gn$Do(function(node) node$BF = BF.sg(node,args[['geneName']]))
 gn$Do(function(node) node$selected = selected(node,selected.branch.path))
 gn$Do(function(node) node$above.thresh = above.thresh(node,all.thresh))
 
@@ -218,7 +217,7 @@ getFormat<-function(node){
 }
 
 par(mar=c(1,1,1,1))
-plot(gnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=paste(toupper(disease),geneName,sep=':'))
+plot(gnp, show.tip.label = TRUE, type = "cladogram",edge.color="grey",edge.width=0.5,plot=FALSE,main=paste(toupper(disease),args[['geneName']],sep=':'))
 
 for(node in Traverse(gn)){
   f<-getFormat(node)

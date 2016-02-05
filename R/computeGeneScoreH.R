@@ -27,52 +27,28 @@ all.thresh<-0.5
 BF.thresh<-3
 
 args<-list(
-  pmi_file = file.path(data.dir,'out/0.1cM_chr22.pmi'),
-  out_file = file.path(data.dir,'out/0.1cM_chr22.geneScores.sets.tab'),
-  csnps = file.path(data.dir,'RDATA/test_csnps.by.ld.RData'),
+  pmi_file = file.path(data.dir,'out/0.1cM_chr22.ppi'),
+  out_dir = file.path(data.dir,'out/hierachical_geneScore/'),
   int = file.path(data.dir,'RDATA/test_interactions.RData'),
   frags = file.path(data.dir,'RDATA/test_frags.by.ld.RData'),
-  ## user defined sets
-  sets = file.path(data.dir,'support/test_set.yaml'),
-  ## if this is set to true then only coding SNPs in target gene are 
-  ## included. If set to false then coding SNPs in interactions in genes
-  ## other than target are counted.
-  target.gene.cSNPs.only=TRUE,
-  ## if set to true then we ignore coding and promoter SNPs when calculating tissue scores
-  ## the special all category does include these.
-  include.interactions.only = TRUE,
-  ## if set to true then the this means that scores for individual tissues within a set are calculated
-  ## probably desirable 
-  decompose = TRUE
+  csnps = file.path(data.dir,'RDATA/test_csnps.by.ld.RData'),
+  target.gene.cSNPs.only = 1,
+  sets = file.path(data.dir,'support/mifsud.yaml'),
+  include.interactions.only=1,
+  decompose=1,
+  ppi.thresh = 0.5,
+  BF.thresh = 3
 )
 
-args<-list(
-pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/ra_okada_imb.pmi",
-out_dir = "/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore/",
-int = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_interactions.RData",
-frags = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_frags.by.ld.RData",
-csnps = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_csnps.by.ld.RData",
-target.gene.cSNPs.only = 1,
-sets = "/Users/oliver/DATA/JAVIERRE_GWAS/support/javierre_tree.yaml",
-include.interactions.only=1,
-decompose=1
-)
 
+all.thresh <- args[['ppi.thresh']]
+BF.thresh <- args[['BF.thresh']]
   
 if(!interactive()){
   args<-getArgs(verbose=TRUE,
-                numeric=c('target.gene.cSNPs.only','decompose','include.interactions.only'),
+                numeric=c('target.gene.cSNPs.only','decompose','include.interactions.only','ppi.thresh','BF.thresh'),
                 defaults = list(include.interactions.only=0,decompose=0,sets=''))
 }
-
-# if(sum(names(args)=='sets')==0)
-# 	args[['sets']]<-''
-# 
-# if(is.null(args[['include.interactions.only']]))
-#   args[['include.interactions.only']]<- 0
-# 
-# if(is.null(args[['decompose']]))
-#   args[['decompose']]<- 0
 
 ## FUNCTIONS 
 
@@ -106,7 +82,6 @@ pmi.file=args[['pmi_file']]
 disease<-sub("[.][^.]*$", "", basename(args[['pmi_file']]), perl=TRUE)
 
 test.pmi<-fread(pmi.file,header=TRUE)
-#setnames(test.pmi,c('chr','start','end','rs','r2','i.pos','maf','pval','ppi','delta'))
 pmi.gr<-with(test.pmi,GRanges(seqnames=Rle(chr),ranges=IRanges(start=end,end=end),ppi=ppi,rs=rsid))
 
 
@@ -195,7 +170,7 @@ tissues[['interaction']]<-tmp.tnames
 to.adj$uid<-with(to.adj,paste(ensg,frag.id,ld.id,sep=":"))
 gint<-do.call("rbind",lapply(seq_along(tissues),function(i){
 	t<-names(tissues)[i]
-	print(paste("Processing",t))
+	message(paste("Processing",t))
 	## grab gene and oeID back
 	sids<-ints[which(rowSums(ints[,tissues[[i]],with=FALSE])>0),]$sid
 	idx<-which(noncoding.interactions$sid %in% sids)
@@ -273,7 +248,7 @@ setcolorder(merged,c('disease',names(details),names(results)[names(results)!="en
 
 full.results.file<-file.path(args[['out_dir']],paste0(disease,'_full.tab'))
 write.table(merged,file=full.results.file,sep="\t",row.names=FALSE,quote=FALSE)
-
+message(paste('written',full.results.file))
 ### hierachical analysis - i.e. which is the best tissue or set of tissues to 
 ## select. Currently we use an average ppi selection proceedure
 
@@ -295,8 +270,11 @@ noncoding:
 
 osList <- yaml.load(par_yaml)
 n<-as.Node(osList)
-n$noncoding$interaction$AddChildNode(setTree$Lymphoid)
-n$noncoding$interaction$AddChildNode(setTree$Myeloid)
+chil<-setTree$children
+n$noncoding$interaction$AddChildNode(chil[[1]])
+n$noncoding$interaction$AddChildNode(chil[[2]])
+#n$noncoding$interaction$AddChildNode(setTree$Lymphoid)
+#n$noncoding$interaction$AddChildNode(setTree$Myeloid)
 
 merged.f<-subset(merged,overall_gene_score>all.thresh)
 
@@ -391,7 +369,7 @@ h$disease<-disease
 
 priortised.results.file<-file.path(args[['out_dir']],paste0(disease,'_prioritised.tab'))
 write.table(h,file=priortised.results.file,sep="\t",row.names=FALSE,quote=FALSE)
-
+message(paste('written',priortised.results.file))
 
 
 
