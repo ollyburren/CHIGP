@@ -3,17 +3,7 @@
 ## REQUIREMENTS
 
 
-## FUNCTION: This script computes basic gene scores by integrating functional and chromatin conformational data
-## for a given GWAS
-
-## EXAMPLE USAGE:
-
-# Rscript generateResourceFiles.R --prefix="test_"
-# --cSNP_file="../DATA/" \\ 
-# --interaction_file="../DATA/chic/misfud_et_al.pm.chr22.tab" --pchic.thresh=5 \\
-# --res_frag_file='../DATA/support/Digest_Human_HindIII_chr22.bed'
-# --region_bed_file='../DATA/support/0.1cM.regions.b37_chr22.bed' \\ 
-# out_dir='../DATA/RDATA/'
+## FUNCTION: This script computes support data for priortising genes in tissue contexts.
 
 library(GenomicRanges)
 library(data.table)
@@ -58,7 +48,7 @@ args<-list(
 
 args<-list(
 pmi_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/pmi/ra_okada_imb.pmi",
-out_file = "/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore//mchc_common.pmi.tab",
+out_dir = "/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore/",
 int = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_interactions.RData",
 frags = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_frags.by.ld.RData",
 csnps = "/Users/oliver/DATA/JAVIERRE_GWAS/RDATA//javierre_csnps.by.ld.RData",
@@ -99,6 +89,11 @@ GetSetsFromTree<-function(osNode){
 
 ## MAIN
 
+## check to see if our out dir exists if not create it
+
+if(!dir.exists(args[['out_dir']]))
+  dir.create(args[['out_dir']])
+
 ints<-get(load(args[['int']]))
 ## grab tissue names
 tmp.tnames<-names(ints)[16:length(names(ints))]
@@ -108,7 +103,7 @@ cs.gr<-get(load(args[['csnps']]))
 options(stringsAsFactors=FALSE)
 
 pmi.file=args[['pmi_file']]
-disease<-sub("\\.pmi$","",basename(pmi.file))
+disease<-sub("[.][^.]*$", "", basename(args[['pmi_file']]), perl=TRUE)
 
 test.pmi<-fread(pmi.file,header=TRUE)
 #setnames(test.pmi,c('chr','start','end','rs','r2','i.pos','maf','pval','ppi','delta'))
@@ -274,7 +269,10 @@ missing<-subset(r,is.na(overall_gene_score))
 merged<-subset(r,!is.na(overall_gene_score))
 merged$disease<-disease
 setcolorder(merged,c('disease',names(details),names(results)[names(results)!="ensg"]))
-#write.table(merged,file=args[['out_file']],sep="\t",row.nhames=FALSE,quote=FALSE)
+
+
+full.results.file<-file.path(args[['out_dir']],paste0(disease,'_full.tab'))
+write.table(merged,file=full.results.file,sep="\t",row.names=FALSE,quote=FALSE)
 
 ### hierachical analysis - i.e. which is the best tissue or set of tissues to 
 ## select. Currently we use an average ppi selection proceedure
@@ -389,6 +387,10 @@ res.dt <- do.call("rbind",lapply(Traverse(n),function(node) {
 #res.dt<-res.dt[,nBF:=ifelse(BF<1,1/BF,BF)]
 h<-res.dt[,.SD[which.max(.SD$score),],by=ensg]
 h<-h[order(h$score),]
+h$disease<-disease
+
+priortised.results.file<-file.path(args[['out_dir']],paste0(disease,'_prioritised.tab'))
+write.table(h,file=priortised.results.file,sep="\t",row.names=FALSE,quote=FALSE)
 
 
 

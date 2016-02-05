@@ -3,7 +3,42 @@
 ### THESE PLOTTING FUNCTIONS TAKE THE BI-PRODUCT OF computeGeneScoreH.R and make some nice plots.
 ## Need to parameterise them so we can easily generate plots across diseases and for specific genes.
 
+library(GenomicRanges)
+library(data.table)
+library(reshape2)
+library(yaml)
+library(data.tree)
+library(ape)
 
+GRPATH<-'/Users/oliver/gitr/'
+
+## Environmental variable setup for GIT repository location
+if(!interactive())
+  GRPATH<-Sys.getenv("GRPATH")
+script.dir <- file.path(GRPATH,'CHIGP/R')
+data.dir <- file.path(GRPATH,'CHIGP/DATA')
+
+
+source(file.path(script.dir,'common.R'))
+
+getTreeYAML<-function(yfile){
+  osList <- yaml.load_file(yfile)
+  as.Node(osList)
+}
+
+
+all.thresh<-0.5
+BF.thresh<-3
+
+gs.dir<-'/Users/oliver/DATA/JAVIERRE_GWAS/out/hierarchical_geneScore/'
+
+args<-list(
+  score_file=file.path(gs.dir,'ra_okada_imb_full.tab'),
+  sets = "/Users/oliver/DATA/JAVIERRE_GWAS/support/javierre_tree.yaml"
+)
+disease<-sub("\\_full[.][^.]*$", "", basename(args[['score_file']]), perl=TRUE)
+merged<-fread(args[['score_file']])
+setTree<-getTreeYAML(args[['sets']])
 
 merged.f<-subset(merged,overall_gene_score >= all.thresh)
 
@@ -126,7 +161,7 @@ h<-h[order(h$score),]
 geneName<- sample(h$name,1)
 #geneName<-'WDR59'
 #geneName<-'AHR'
-geneName<-'CD101'
+geneName<-'PTGFRN'
 
 ppi.sg<-function(n,geneName){
   return(subset(merged.f,name==geneName)[[n$dtName]])
