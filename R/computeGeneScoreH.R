@@ -80,6 +80,7 @@ options(stringsAsFactors=FALSE)
 
 pmi.file=args[['pmi_file']]
 disease<-sub("[.][^.]*$", "", basename(args[['pmi_file']]), perl=TRUE)
+file.stub<-basename(args[['pmi_file']])
 
 test.pmi<-fread(pmi.file,header=TRUE)
 pmi.gr<-with(test.pmi,GRanges(seqnames=Rle(chr),ranges=IRanges(start=end,end=end),ppi=ppi,rs=rsid))
@@ -246,7 +247,7 @@ merged$disease<-disease
 setcolorder(merged,c('disease',names(details),names(results)[names(results)!="ensg"]))
 
 
-full.results.file<-file.path(args[['out_dir']],paste0(disease,'_full.tab'))
+full.results.file<-file.path(args[['out_dir']],paste0(file.stub,'_full.tab'))
 write.table(merged,file=full.results.file,sep="\t",row.names=FALSE,quote=FALSE)
 message(paste('written',full.results.file))
 ### hierachical analysis - i.e. which is the best tissue or set of tissues to 
@@ -366,8 +367,7 @@ res.dt <- do.call("rbind",lapply(Traverse(n),function(node) {
 h<-res.dt[,.SD[which.max(.SD$score),],by=ensg]
 h<-h[order(h$score),]
 h$disease<-disease
-
-priortised.results.file<-file.path(args[['out_dir']],paste0(disease,'_prioritised.tab'))
+priortised.results.file<-file.path(args[['out_dir']],paste0(file.stub,'_prioritised.tab'))
 write.table(h,file=priortised.results.file,sep="\t",row.names=FALSE,quote=FALSE)
 message(paste('written',priortised.results.file))
 

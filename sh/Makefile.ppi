@@ -6,8 +6,11 @@ RDATADIR = $(DATADIR)RDATA/
 
 #all:../DATA/out/0.1cM_chr22.geneScores.tab
 
-$(DATADIR)/out/0.1cM_chr22.geneScores.ppi.tab:$(RDATADIR)/test_interactions.RData $(RDATADIR)/test_frags.by.ld.RData $(RDATADIR)/test_cnps.by.ld.RData
+$(DATADIR)/out/0.1cM_chr22.geneScores.ppi.tab:$(DATADIR)/out/hierachical_geneScore//0.1cM_chr22.ppi_prioritised.tab
 	./test_compute_gene_scores_ppi.sh
+
+$(DATADIR)/out/hierachical_geneScore//0.1cM_chr22.ppi_prioritised.tab:$(RDATADIR)/test_interactions.RData $(RDATADIR)/test_frags.by.ld.RData $(RDATADIR)/test_cnps.by.ld.RData
+	./test_prioritise_genes_ppi.sh
 	
 $(RDATADIR)/test_interactions.RData:$(DATADIR)/out/0.1cM_chr22.ppi
 	./test_gen_resource_files.sh
