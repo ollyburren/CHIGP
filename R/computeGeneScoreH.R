@@ -232,6 +232,8 @@ fi<-rbind(gint,noncoding.prom.cor)
 coding<-cs[,list(gene_score=1-prod(1-sppi)),by="ensg"]
 coding$tissue<-'coding'
 fi<-rbind(fi,coding)
+## gene scores of NA mess things up set these to zero
+fi[is.na(gene_score),]$gene_score<-0
 foo<-melt(fi,id.vars=c("ensg","tissue"))
 results<-data.table(dcast(foo,ensg~tissue+variable),key="ensg")
 
