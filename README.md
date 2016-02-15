@@ -1,6 +1,6 @@
 #CHiGP
 
-CHiGP stands for **C**apture **Hi**-C **G**ene **P**rioritisation. It's purpose is to take a bunch of p-vals from a genome-wide association study and integrate these with capture Hi-C data to prioritise genes. The computational engine is written in R and whilst it should be possible to process on a laptop, things will go considerably faster if you have access to a compute cluster. Please note that at the moment we don't attempt to do anyhting sensible with MHC regions which we define as a region on chr6(25-35Mb) GRCh37 coords.
+CHiGP stands for **C**apture **Hi**-C **G**ene **P**rioritisation. It's purpose is to take a bunch of p-vals from a genome-wide association study and integrate these with capture Hi-C data to prioritise genes. The computational engine is written in R and whilst it should be possible to process on a laptop, things will go considerably faster if you have access to a compute cluster. Please note that at the moment we don't attempt to do anything sensible with MHC regions which we define as a region on chr6(25-35Mb) GRCh37 coords.
 
 ##Credits
 
@@ -47,7 +47,7 @@ export TABIX_BIN
 
 ##Setup Environment
 
-All scripts and instructions assume that you have a git repository directory in which you have cloned CHIGP. We need to setup a shell environment variable as to where that is
+All scripts and instructions assume that you have a git repository directory in which you have cloned CHIGP called /home/USERNAME/gitr/CHIGP. We need to setup a shell environment variable as to where that is
 
 ```
 ## assume git repo is in your home dir as CHIGP and is called gitr, you need to add your own USERNAME.
