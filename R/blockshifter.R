@@ -345,6 +345,7 @@ blockshifter <-
   print(paste("CONTROL mlp:",signif(act.cmlp,digits=3),"n.snps:",sum(mer[mer$control,]$n)))
   print(paste("Delta:",signif(delta,digits=3)))
   pval.emp<-sum(delta<null.delta)/length(null.delta)
+  pval.emp.twotail<-sum(abs(delta)<abs(null.delta))/length(null.delta)
   
   if(pval.emp==0)
     p.val.emp<-1/perm.no
@@ -352,7 +353,7 @@ blockshifter <-
   ## also compute Z score
   z<-(delta-mean(null.delta))/sd(null.delta)
   pval.z<-2*pnorm(abs(z),lower.tail = FALSE)
-  output.df<-data.frame(type=metric,gwas=gwas_trait,test=test.set.label,control=control.set.label,perm=perm.no,p.emp=pval.emp,z=z,p.val.z=pval.z,delta=delta)
+  output.df<-data.frame(type=metric,gwas=gwas_trait,test=test.set.label,control=control.set.label,perm=perm.no,p.emp=pval.emp,p.emp.twotail=pval.emp.twotail,z=z,p.val.z=pval.z,delta=delta)
   output.df
 }
 
