@@ -74,7 +74,7 @@ q()
 Next grab the test file bundle. This contains a cut down set of real data taken from Misfud et al., GWAS from Okada et al. and reference genotypes from EUR 1000 Genomes Project.
 ```
 cd /home/USERNAME/gitr/CHIGP
-curl -s http://www.immunobase.org/downloads/CHIGP/CHIGP.databundle.tgz | tar -xvz
+curl -s https://www.immunobase.org/downloads/CHIGP/CHIGP.databundle.tgz | tar -xvz
 ```
 
 The above command should have created the DATA directory. 
